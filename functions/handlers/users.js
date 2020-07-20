@@ -1,7 +1,12 @@
-const { db } = require('../util/admin');
-const { validateSignupData, validateLoginData } = require('../util/validators');
+const { admin, db } = require('../util/admin');
+const {
+  validateSignupData,
+  validateLoginData,
+  reduceUserDetails,
+} = require('../util/validators');
 const config = require('../util/config');
 const firebase = require('firebase');
+const { user } = require('firebase-functions/lib/providers/auth');
 firebase.initializeApp(config);
 
 //==============
@@ -18,6 +23,8 @@ exports.signup = (req, res) => {
   //Check all fields are filled correctly
   const { valid, errors } = validateSignupData(newUser);
   if (!valid) return res.status(400).json(errors);
+
+  const noImg = 'bert.jpg';
 
   //Firebase logic
   let token, userId;
@@ -46,6 +53,7 @@ exports.signup = (req, res) => {
         email: newUser.email,
         createdAt: new Date().toISOString(),
         password: newUser.password,
+        imgUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${noImg}?alt=media`,
         userId,
       };
       return db.doc(`/user/${newUser.handle}`).set(userCredentials);
@@ -96,4 +104,104 @@ exports.login = (req, res) => {
         return res.status(500).json({ error: err.code });
       }
     });
+};
+
+//==================
+//Add User details logic
+//==================
+exports.addUserDetails = (req, res) => {
+  let userDetails = reduceUserDetails(req.body);
+
+  db.doc(`/user/${req.user.handle}`)
+    .update(userDetails)
+    .then(() => {
+      return res.json({ message: 'Details added succesfully' });
+    })
+    .catch(err => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+};
+
+//==================
+//Get current user details
+//==================
+exports.getAuthenticatedUser = (req, res) => {
+  let userData = {};
+
+  db.doc(`/user/${req.user.handle}`)
+    .get()
+    .then(doc => {
+      if (doc.exists) {
+        userData.credentials = doc.data();
+        return db
+          .collection('likes')
+          .where('userHandle', '==', req.user.handle)
+          .get()
+          .then(data => {
+            userData.likes = [];
+            data.forEach(doc => {
+              userData.likes.push(doc.data());
+            });
+            return res.json(userData);
+          })
+          .catch(err => {
+            console.error(err);
+            return res.status(500).json({ error: err.code });
+          });
+      }
+    });
+};
+
+//==================
+//Upload image logic
+//==================
+exports.uploadImage = (req, res) => {
+  const BusBoy = require('busboy');
+  const path = require('path');
+  const os = require('os');
+  const fs = require('fs');
+
+  const busboy = new BusBoy({ headers: req.headers });
+
+  let imgFileName;
+  let imgToUpload = {};
+
+  busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+    if (mimetype !== 'image/jpeg' && mimetype !== 'image/png') {
+      return res.status(400).json({ error: 'Wrong file type submitted' });
+    }
+    const imgExtension = filename.split('.')[filename.split('.').length - 1];
+    imgFileName = `${Math.round(Math.random() * 10000)}.${imgExtension}`;
+    const filepath = path.join(os.tmpdir(), imgFileName);
+    imgToUpload = { filepath, mimetype };
+    file.pipe(fs.createWriteStream(filepath));
+  });
+  busboy.on('finish', () => {
+    admin
+      .storage()
+      .bucket()
+      .upload(imgToUpload.filepath, {
+        resumable: false,
+        metadata: {
+          metadata: {
+            contentType: imgToUpload.mimetype,
+          },
+        },
+      })
+      .then(() => {
+        const imgUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imgFileName}?alt=media`;
+        return db
+          .doc(`/user/${req.user.handle}`)
+          .update({ imgUrl })
+          .then(() => {
+            return res.json({ message: 'Image uploaded succesfully' });
+          })
+          .catch(err => {
+            console.error(err);
+            return res.status(500).json({ error: err.code });
+          });
+      });
+  });
+  busboy.end(req.rawBody);
 };
