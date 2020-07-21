@@ -28,8 +28,9 @@ module.exports = (req, res, next) => {
         .get();
     })
     .then(data => {
-      //Save user handle to req.user.handle
+      //Save user handle and profile img to req.user so it is available for multiple routes
       req.user.handle = data.docs[0].data().handle;
+      req.user.imgUrl = data.docs[0].data().imgUrl;
       return next();
     })
     .catch(err => {
