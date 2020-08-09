@@ -1,9 +1,11 @@
 const functions = require('firebase-functions');
 const app = require('express')();
 const { db } = require('./util/admin');
+const cors = require('cors');
 
 //Middleware
 const FBAuth = require('./util/fbAuth');
+app.use(cors());
 //Import route logic
 const {
   getAllScreams,
