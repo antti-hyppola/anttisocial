@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.css": "/static/css/main.e1081b49.chunk.css",
+    "main.js": "/static/js/main.f1439738.chunk.js",
+    "main.js.map": "/static/js/main.f1439738.chunk.js.map",
+    "runtime-main.js": "/static/js/runtime-main.e0528dc9.js",
+    "runtime-main.js.map": "/static/js/runtime-main.e0528dc9.js.map",
+    "static/js/2.94d1520d.chunk.js": "/static/js/2.94d1520d.chunk.js",
+    "static/js/2.94d1520d.chunk.js.map": "/static/js/2.94d1520d.chunk.js.map",
+    "index.html": "/index.html",
+    "precache-manifest.6dd1a705d24524e9b894e12f1c0c451d.js": "/precache-manifest.6dd1a705d24524e9b894e12f1c0c451d.js",
+    "service-worker.js": "/service-worker.js",
+    "static/css/main.e1081b49.chunk.css.map": "/static/css/main.e1081b49.chunk.css.map",
+    "static/js/2.94d1520d.chunk.js.LICENSE.txt": "/static/js/2.94d1520d.chunk.js.LICENSE.txt",
+    "static/media/distancing.png": "/static/media/distancing.921e6266.png",
+    "static/media/no-img.png": "/static/media/no-img.5a021ab9.png"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.e0528dc9.js",
+    "static/js/2.94d1520d.chunk.js",
+    "static/css/main.e1081b49.chunk.css",
+    "static/js/main.f1439738.chunk.js"
+  ]
+}
